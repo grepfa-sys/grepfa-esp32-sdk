@@ -1,0 +1,43 @@
+//
+// Created by vl0011 on 23. 6. 17.
+//
+
+#ifndef GREPFA_ESP_COMPONENTS_GREPFA_ERROR_H
+#define GREPFA_ESP_COMPONENTS_GREPFA_ERROR_H
+
+#include <esp_err.h>
+#include <string>
+#include <unordered_map>
+
+namespace grepfa{
+    enum class ErrorType : esp_err_t {
+        UNKNOWN = -1,
+        OK = ESP_OK,
+        FAIL = ESP_FAIL,
+        NO_MEM = ESP_ERR_NO_MEM,
+        INVALID_ARG = ESP_ERR_INVALID_ARG,
+        INVALID_STATE = ESP_ERR_INVALID_STATE,
+        INVALID_SIZE = ESP_ERR_INVALID_SIZE,
+        NOT_FOUND = ESP_ERR_NOT_FOUND,
+        NOT_SUPPORTED = ESP_ERR_NOT_SUPPORTED,
+        ERR_TIMEOUT = ESP_ERR_TIMEOUT,
+        INVALID_RESPONSE = ESP_ERR_INVALID_RESPONSE,
+        INVALID_CRC = ESP_ERR_INVALID_CRC,
+        INVALID_VERSION = ESP_ERR_INVALID_VERSION,
+        INVALID_MAC = ESP_ERR_INVALID_MAC,
+        NOT_FINISHED = ESP_ERR_NOT_FINISHED,
+
+        ERR_WIFI_BASE = ESP_ERR_WIFI_BASE,
+        ERR_MESH_BASE = ESP_ERR_MESH_BASE,
+        ERR_FLASH_BASE = ESP_ERR_FLASH_BASE,
+        ERR_HW_CRYPTO_BASE = ESP_ERR_HW_CRYPTO_BASE,
+        ERR_MEMPROT_BASE = ESP_ERR_MEMPROT_BASE,
+
+        ERR_JSON = 0x10000,
+        PAYLOAD_ID_MISMATCH,
+        PHYSICAL_ID_MISMATCH
+    };
+    std::string GetErrorString(ErrorType err);
+}
+
+#endif //GREPFA_ESP_COMPONENTS_GREPFA_ERROR_H

@@ -1,0 +1,3 @@
+[submodule "components/grepfa_json/ArduinoJson"]
+	path = components/grepfa_json/ArduinoJson
+	url = https://github.com/bblanchon/ArduinoJson.git
