@@ -74,8 +74,8 @@ std::expected<std::string, grepfa::ErrorType> grepfa::EventPayload::toJSON() noe
 //}
 
 grepfa::EventPayload::EventPayload() {
-    ArduinoJson::DynamicJsonDocument
-    this->type = MessageType::EVENT;
+//    ArduinoJson::DynamicJsonDocument
+//    this->type = MessageType::EVENT;
 }
 
 grepfa::EventPayload *grepfa::EventPayload::add(const grepfa::PayloadValue& value) {

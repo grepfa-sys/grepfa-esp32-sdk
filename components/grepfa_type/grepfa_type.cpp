@@ -8,6 +8,9 @@
 #include <grepfa_uuid.h>
 #include <ctime>
 
+
+
+
 static std::unordered_map<grepfa::NetworkType, std::string> NetworkTypeStringMap = {
         {grepfa::NetworkType::UNKNOWN, NETWORK_TYPE_UNKNOWN_KEY},
         {grepfa::NetworkType::WIFI, NETWORK_TYPE_WIFI_KEY},
@@ -153,15 +156,44 @@ grepfa::IPayload::IPayload() {
     timestamp = time(nullptr);
 }
 
-std::expected<std::unique_ptr<ArduinoJson::DynamicJsonDocument>, grepfa::ErrorType>
-grepfa::IPayload::baseJSON2() noexcept {
-    auto doc = std::make_unique<ArduinoJson::DynamicJsonDocument>(200);
+ArduinoJson::JsonVariant
+grepfa::IPayload::baseJSON2(ArduinoJson::JsonVariant doc) noexcept {
+    doc[JSON_KEY_TIME] = this->timestamp;
+    doc[JSON_KEY_PHYSICAL_DEVICE_ID] = this->thingsId;
+    doc[JSON_KEY_PAYLOAD_ID] = this->payloadId;
 
-
-    return std::expected<std::unique_ptr<ArduinoJson::DynamicJsonDocument>, grepfa::ErrorType>();
+    doc[JSON_KEY_NETWORK] = this->network;
+    doc[JSON_KEY_PROTOCOL] = this->protocol;
+    doc[JSON_KEY_MESSAGE_TYPE] = this->type;
+    return doc;
 }
 
-std::string grepfa::ConnectionProtocolToString(grepfa::NetworkType type) {
+grepfa::ErrorType grepfa::IPayload::setFromJSONObj2(ArduinoJson::JsonVariantConst doc) noexcept {
+    if (!doc.containsKey(JSON_KEY_TIME))
+        return ErrorType::ERR_JSON;
+    if (!doc.containsKey(JSON_KEY_PHYSICAL_DEVICE_ID))
+        return ErrorType::ERR_JSON;
+    if (!doc.containsKey(JSON_KEY_PAYLOAD_ID))
+        return ErrorType::ERR_JSON;
+    if (!doc.containsKey(JSON_KEY_NETWORK))
+        return ErrorType::ERR_JSON;
+    if (!doc.containsKey(JSON_KEY_PROTOCOL))
+        return ErrorType::ERR_JSON;
+    if (!doc.containsKey(JSON_KEY_MESSAGE_TYPE))
+        return ErrorType::ERR_JSON;
+
+    this->timestamp = doc[JSON_KEY_PHYSICAL_DEVICE_ID];
+    this->thingsId = doc[JSON_KEY_PHYSICAL_DEVICE_ID].as<ArduinoJson::JsonString>().c_str();
+    this->payloadId = doc[JSON_KEY_PAYLOAD_ID].as<ArduinoJson::JsonString>().c_str();
+
+    this->network = doc[JSON_KEY_NETWORK].as<NetworkType>();
+    this->protocol = doc[JSON_KEY_PROTOCOL].as<ConnectionProtocol>();
+    this->type = doc[JSON_KEY_MESSAGE_TYPE].as<MessageType>();
+
+    return ErrorType::OK;
+}
+
+std::string grepfa::NetworkTypeToString(grepfa::NetworkType type) {
     return NetworkTypeStringMap[type];
 }
 
@@ -221,3 +253,5 @@ const std::string &grepfa::Global::getClientCrt() {
 const std::string &grepfa::Global::getClientKey() {
     return clientKEY;
 }
+
+

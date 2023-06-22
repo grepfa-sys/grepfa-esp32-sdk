@@ -4,6 +4,7 @@
 
 #include <grepfa_payload.h>
 #include <cJSON.h>
+#include <sstream>
 
 grepfa::LogPayload::LogPayload() {
     this->type = MessageType::LOG;
@@ -21,21 +22,19 @@ std::unique_ptr<grepfa::IPayload> grepfa::LogPayload::builder(LogLevel level, co
 }
 
 std::expected<std::string, grepfa::ErrorType> grepfa::LogPayload::toJSON() noexcept {
-    auto base = baseJSON();
+    ArduinoJson::DynamicJsonDocument doc(2048);
+
+    auto base = baseJSON2(doc);
     if (!base) {
         return std::unexpected<grepfa::ErrorType>{grepfa::ErrorType::ERR_JSON};
     }
 
-    auto obj = base.value();
+    base["log"] = ArduinoJson::JsonString(message.c_str(), ArduinoJson::JsonString::Copied);
+    base["level"].set(level);
 
-    cJSON_AddStringToObject(obj, "log", message.c_str());
-    if(cJSON_AddStringToObject(obj, "level", grepfa::LogLevelToString(level).c_str()) == nullptr) {
-        return std::unexpected<grepfa::ErrorType>{grepfa::ErrorType::ERR_JSON};
-    }
-    char* payload = cJSON_PrintUnformatted(obj);
-    cJSON_Delete(obj);
-    std::string ret = payload;
-    cJSON_free(payload);
-    return ret;
+    std::stringstream ss;
+    ArduinoJson::serializeJson(base, ss);
+
+    return ss.str();
 }
 

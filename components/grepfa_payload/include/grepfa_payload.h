@@ -27,7 +27,6 @@ namespace grepfa {
         static std::unique_ptr<IPayload> builder(LogLevel level, const std::string& message) noexcept;
 
         static std::unique_ptr<IPayload> dev(const std::string& message)   noexcept { return builder(LogLevel::DEVELOP, message);}
-        static std::unique_ptr<IPayload> log(const std::string& message)   noexcept { return builder(LogLevel::LOG, message);}
         static std::unique_ptr<IPayload> info(const std::string& message)  noexcept { return builder(LogLevel::INFO, message);}
         static std::unique_ptr<IPayload> alert(const std::string& message) noexcept { return builder(LogLevel::ALERT, message);}
         static std::unique_ptr<IPayload> warn(const std::string& message)  noexcept { return builder(LogLevel::WARNING, message);}
@@ -76,6 +75,32 @@ namespace grepfa {
     class ControlPayload : public IPayload {
 
     };
+}
+
+namespace ArduinoJson {
+//    template <>
+//    struct Converter<grepfa::PayloadValue> {
+//        static void toJson(const std::vector<T>& src, JsonVariant dst) {
+//            JsonArray array = dst.to<JsonArray>();
+//            for (T item : src)
+//                array.add(item);
+//        }
+//
+//        static std::vector<T> fromJson(JsonVariantConst src) {
+//            std::vector<T> dst;
+//            for (T item : src.as<JsonArrayConst>())
+//                dst.push_back(item);
+//            return dst;
+//        }
+//
+//        static bool checkJson(JsonVariantConst src) {
+//            JsonArrayConst array = src;
+//            bool result = array;
+//            for (JsonVariantConst item : array)
+//                result &= item.is<T>();
+//            return result;
+//        }
+//    };
 }
 
 #endif //GREPFA_ESP_COMPONENTS_GREPFA_PAYLOAD_H
