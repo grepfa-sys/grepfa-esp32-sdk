@@ -53,65 +53,27 @@ grepfa::PayloadValue grepfa::PayloadValue::builder(
     return {channel, id, std::to_string(value), type, grepfa::ValueType::BOOLEAN};
 }
 
-
-std::expected<cJSON *, grepfa::ErrorType> grepfa::PayloadValue::baseJSON() noexcept {
-    auto ret = cJSON_CreateObject();
-    cJSON_AddNumberToObject(ret, "channel", channel);
-    cJSON_AddStringToObject(ret, "name", name.c_str());
-    cJSON_AddStringToObject(ret, "id",   id.c_str());
-    cJSON_AddStringToObject(ret, "valueType", grepfa::ValueTypeToString(valueType).c_str());
-    cJSON_AddStringToObject(ret, "type", type.c_str());
-    if(cJSON_AddStringToObject(ret, "value", value.c_str()) == nullptr) {
-        return std::unexpected<grepfa::ErrorType> {grepfa::ErrorType::ERR_JSON};
-    }
-
-    return ret;
+int grepfa::PayloadValue::getChannel() const {
+    return channel;
 }
 
-std::expected<grepfa::PayloadValue, grepfa::ErrorType> grepfa::PayloadValue::buildWithJSONObj(cJSON *obj) {
-    if (obj == nullptr) {
-        return std::unexpected<ErrorType>{ErrorType::INVALID_ARG};
-    }
+const std::string &grepfa::PayloadValue::getId() const {
+    return id;
+}
 
-    cJSON* el;
+//const std::string &grepfa::PayloadValue::getName() const {
+//    return name;
+//}
 
-    printf("1\n");
-    el = cJSON_GetObjectItemCaseSensitive(obj, "channel");
-    if (el == nullptr || !cJSON_IsNumber(el)) {
-        return std::unexpected<ErrorType> {ErrorType::ERR_JSON};
-    }
-    int channel = cJSON_GetNumberValue(el);
-    printf("2\n");
-    el = cJSON_GetObjectItemCaseSensitive(obj, "id");
-    if (el == nullptr || !cJSON_IsString(el)) {
-        return std::unexpected<ErrorType> {ErrorType::ERR_JSON};
-    }
-    std::string id = cJSON_GetStringValue(el);
-    printf("3\n");
-    el = cJSON_GetObjectItemCaseSensitive(obj, "name");
-    if (el == nullptr || !cJSON_IsString(el)) {
-        return std::unexpected<ErrorType> {ErrorType::ERR_JSON};
-    }
-    std::string name = cJSON_GetStringValue(el);
-    printf("4\n");
-    el = cJSON_GetObjectItemCaseSensitive(obj, "value");
-    if (el == nullptr || !cJSON_IsString(el)) {
-        return std::unexpected<ErrorType> {ErrorType::ERR_JSON};
-    }
-    std::string value = cJSON_GetStringValue(el);
-    printf("5\n");
-    el = cJSON_GetObjectItemCaseSensitive(obj, "type");
-    if (el == nullptr || !cJSON_IsString(el)) {
-        return std::unexpected<ErrorType> {ErrorType::ERR_JSON};
-    }
-    std::string type = cJSON_GetStringValue(el);
-    printf("6\n");
-    el = cJSON_GetObjectItemCaseSensitive(obj, "valueType");
-    if (el == nullptr || !cJSON_IsString(el)) {
-        return std::unexpected<ErrorType> {ErrorType::ERR_JSON};
-    }
-    ValueType vt = ValueTypeFromString(cJSON_GetStringValue(el));
+const std::string &grepfa::PayloadValue::getValue() const {
+    return value;
+}
 
-    return PayloadValue(channel, id, value, type, vt);
+const std::string &grepfa::PayloadValue::getType() const {
+    return type;
+}
+
+grepfa::ValueType grepfa::PayloadValue::getValueType() const {
+    return valueType;
 }
 

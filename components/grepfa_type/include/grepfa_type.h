@@ -10,10 +10,18 @@
 #include <memory>
 #include <expected>
 
-#include <cJSON.h>
 #include <grepfa_error.h>
 #include <ArduinoJson.hpp>
 #include <vector>
+
+extern const uint8_t client_cert_pem_start[] asm("_binary_client_crt_start");
+extern const uint8_t client_cert_pem_end[] asm("_binary_client_crt_end");
+
+extern const uint8_t client_key_pem_start[] asm("_binary_client_key_start");
+extern const uint8_t client_key_pem_end[] asm("_binary_client_key_end");
+
+extern const char root_cert_auth_start[] asm("_binary_root_cert_auth_crt_start");
+extern const char root_cert_auth_end[]   asm("_binary_root_cert_auth_crt_end");
 
 namespace grepfa {
 
@@ -78,37 +86,48 @@ namespace grepfa{
     class Global {
     private:
         inline const static std::string physicalId = "TODO";
-        inline const static std::string rootCA = "TODO";
-        inline const static std::string clientCRT = "TODO";
-        inline const static std::string clientKEY = "TODO";
+        inline const static char* rootCA = ((char*)root_cert_auth_start);
+        inline const static char* clientCRT = ((char*)client_cert_pem_start);
+        inline const static char* clientKEY = ((char*)client_key_pem_start);
 
         Global() = default;
     public:
         static const std::string &getPhysicalId();
-        static const std::string &getRootCa();
-        static const std::string &getClientCrt();
-        static const std::string &getClientKey();
+        static const char* getRootCa();
+        static const char* getClientCrt();
+        static const char* getClientKey();
     };
 
     class IPayload {
     protected:
+    public:
+        const std::string &getThingsId() const;
+
+        const std::string &getPayloadId() const;
+
+        time_t getTimestamp() const;
+
+        NetworkType getNetwork() const;
+
+        ConnectionProtocol getAProtocol() const;
+
+        MessageType getType() const;
+
+    protected:
         std::string thingsId;
         std::string payloadId;
         time_t timestamp;
-
         NetworkType network = NetworkType::UNKNOWN;
         ConnectionProtocol protocol = ConnectionProtocol::UNKNOWN;
         MessageType type = MessageType::UNKNOWN;
-
-        std::expected<cJSON*, grepfa::ErrorType> baseJSON() noexcept;
-
-        grepfa::ErrorType setFromJSONObj(cJSON*) noexcept;
-
         ArduinoJson::JsonVariant baseJSON2(ArduinoJson::JsonVariant doc) noexcept;
         grepfa::ErrorType setFromJSONObj2(ArduinoJson::JsonVariantConst doc) noexcept;
 
     public:
         IPayload();
+        explicit IPayload(MessageType type);
+        IPayload(std::string payloadId, time_t timestamp, NetworkType network, ConnectionProtocol aProtocol,
+                 MessageType type);
 
         virtual ~IPayload() noexcept = default;
         void renew();

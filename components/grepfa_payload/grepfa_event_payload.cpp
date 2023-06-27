@@ -5,6 +5,8 @@
 #include <grepfa_payload.h>
 #include <ArduinoJson.hpp>
 #include <grepfa_type_key_name.h>
+#include <sstream>
+#include <utility>
 
 std::unique_ptr<grepfa::EventPayload> grepfa::EventPayload::builder() {
     auto payload = new EventPayload;
@@ -13,75 +15,52 @@ std::unique_ptr<grepfa::EventPayload> grepfa::EventPayload::builder() {
     return ret;
 }
 
-std::expected<std::unique_ptr<grepfa::EventPayload>, grepfa::ErrorType> grepfa::EventPayload::fromJSON(const std::string& jsonStr) {
-    cJSON* obj = cJSON_ParseWithLength(jsonStr.c_str(), jsonStr.length());
-    if (obj == nullptr) {
-        return std::unexpected<ErrorType>{ErrorType::ERR_JSON};
-    }
-    auto ep = std::make_unique<EventPayload>();
-    auto ret = ep->setFromJSONObj(obj);
+std::expected<std::unique_ptr<grepfa::EventPayload>, grepfa::ErrorType>
+grepfa::EventPayload::fromJSON(const ArduinoJson::JsonVariantConst doc) {
+        auto ret = std::make_unique<EventPayload>();
+    auto err = ret->setFromJSONObj2(doc);
 
-    if (ret != ErrorType::OK) {
-        cJSON_Delete(obj);
-        return std::unexpected<ErrorType> {ret};
-    }
-    cJSON_GetObjectItemCaseSensitive(obj, "values");
-    cJSON* valEl;
-
-    cJSON_ArrayForEach(valEl, obj) {
-        auto p = PayloadValue::buildWithJSONObj(valEl);
-        if (p) {
-            ep->values.push_back(p.value());
-        } else {
-            return std::unexpected<ErrorType>{p.error()};
-        }
+    if (err != ErrorType::OK) {
+        return std::unexpected<ErrorType>{err};
     }
 
-    return ep;
+    ret->values = doc["values"].as<std::vector<PayloadValue>>();
+
+    return ret;
 }
 
 std::expected<std::string, grepfa::ErrorType> grepfa::EventPayload::toJSON() noexcept {
-    auto base = baseJSON();
+
+    ArduinoJson::DynamicJsonDocument doc(2048);
+    auto base = baseJSON2(doc);
 
     if (!base) {
         return std::unexpected<ErrorType> {ErrorType::ERR_JSON};
     }
 
-    auto obj = base.value();
-    auto arr = cJSON_CreateArray();
-    for (auto &el : values) {
+    base["values"].set<std::vector<PayloadValue>>(this->values);
 
-        auto oe = el.baseJSON();
-        if (!oe) {
-            return std::unexpected<ErrorType>{ErrorType::ERR_JSON};
-        }
-        cJSON_AddItemToArray(arr, oe.value());
-    }
+    std::stringstream ss;
 
-    cJSON_AddItemToObject(obj, "values", arr);
+    ArduinoJson::serializeJson(doc, ss);
 
-    auto raw = cJSON_Print(obj);
-    std::string ret = raw;
-    cJSON_Delete(obj);
-    cJSON_free(raw);
-
-    return ret;
+    return ss.str();
 }
 
-//grepfa::EventPayload *grepfa::EventPayload::add(std::unique_ptr<PayloadValue> value) {
-//    this->values.push_back(std::move(value));
-//    return this;
-//}
 
-grepfa::EventPayload::EventPayload() {
-//    ArduinoJson::DynamicJsonDocument
-//    this->type = MessageType::EVENT;
-}
+grepfa::EventPayload::EventPayload() :IPayload(MessageType::EVENT) {}
 
 grepfa::EventPayload *grepfa::EventPayload::add(const grepfa::PayloadValue& value) {
     this->values.push_back(value);
     return this;
 }
+
+grepfa::EventPayload::EventPayload(
+        std::string payloadId,
+        time_t timestamp,
+        grepfa::NetworkType network,
+        grepfa::ConnectionProtocol aProtocol
+        ):IPayload(std::move(payloadId), timestamp, network, aProtocol, MessageType::EVENT) {}
 
 grepfa::EventPayload::~EventPayload() = default;
 

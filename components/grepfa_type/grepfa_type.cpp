@@ -7,6 +7,7 @@
 #include <grepfa_type.h>
 #include <grepfa_uuid.h>
 #include <ctime>
+#include <utility>
 
 
 
@@ -70,80 +71,6 @@ void grepfa::IPayload::setType(grepfa::MessageType type) noexcept {
 }
 
 
-std::expected<cJSON*, grepfa::ErrorType> grepfa::IPayload::baseJSON() noexcept {
-    auto obj = cJSON_CreateObject();
-
-    cJSON_AddStringToObject(obj, JSON_KEY_PHYSICAL_DEVICE_ID, Global::getPhysicalId().c_str());
-    cJSON_AddStringToObject(obj, JSON_KEY_PAYLOAD_ID, payloadId.c_str());
-    cJSON_AddNumberToObject(obj, JSON_KEY_TIME, timestamp);
-    cJSON_AddStringToObject(obj, JSON_KEY_NETWORK, NetworkTypeStringMap.at(this->network).c_str());
-    cJSON_AddStringToObject(obj, JSON_KEY_PROTOCOL, ConnectionProtocolStringMap.at(this->protocol).c_str());
-    auto ret = cJSON_AddStringToObject(obj, JSON_KEY_MESSAGE_TYPE, MessageTypeStringMap.at(this->type).c_str());
-    if (ret == nullptr) {
-        return std::unexpected<grepfa::ErrorType> {grepfa::ErrorType::ERR_JSON};
-    }
-    return obj;
-}
-
-grepfa::ErrorType grepfa::IPayload::setFromJSONObj(cJSON* obj) noexcept {
-
-    // type
-    auto el = cJSON_GetObjectItemCaseSensitive(obj, JSON_KEY_MESSAGE_TYPE);
-    std::string buf;
-
-    if (el == nullptr || !cJSON_IsString(el)) {
-        return ErrorType::ERR_JSON;
-    } else {
-        buf = cJSON_GetStringValue(el);
-        type = MessageTypeFromString(buf);
-    }
-
-    // type
-    el = cJSON_GetObjectItemCaseSensitive(obj, JSON_KEY_NETWORK);
-    if (el == nullptr || !cJSON_IsString(el)) {
-        return ErrorType::ERR_JSON;
-    } else {
-        buf = cJSON_GetStringValue(el);
-        network = NetworkTypeFromString(buf);
-    }
-
-    // protocol
-    el = cJSON_GetObjectItemCaseSensitive(obj, JSON_KEY_PROTOCOL);
-    if (el == nullptr || !cJSON_IsString(el)) {
-        return ErrorType::ERR_JSON;
-    } else {
-        buf = cJSON_GetStringValue(el);
-        protocol = ConnectionProtocolFromString(buf);
-
-    }
-
-    // payload_id
-    el = cJSON_GetObjectItemCaseSensitive(obj, JSON_KEY_PAYLOAD_ID);
-    if (el == nullptr || !cJSON_IsString(el)) {
-        return ErrorType::ERR_JSON;
-    } else {
-        payloadId = cJSON_GetStringValue(el);
-    }
-
-    // things_id
-    el = cJSON_GetObjectItemCaseSensitive(obj, JSON_KEY_PHYSICAL_DEVICE_ID);
-    if (el == nullptr || !cJSON_IsString(el)) {
-        return ErrorType::ERR_JSON;
-    } else {
-        thingsId = cJSON_GetStringValue(el);
-    }
-
-    // timestamp
-    el = cJSON_GetObjectItemCaseSensitive(obj, JSON_KEY_TIME);
-    if (el == nullptr || !cJSON_IsNumber(el)) {
-        return ErrorType::ERR_JSON;
-    } else {
-        timestamp = cJSON_GetNumberValue(el);
-    }
-
-    return ErrorType::OK;
-}
-
 void grepfa::IPayload::renew() {
     timestamp = time(nullptr);
 }
@@ -160,11 +87,11 @@ ArduinoJson::JsonVariant
 grepfa::IPayload::baseJSON2(ArduinoJson::JsonVariant doc) noexcept {
     doc[JSON_KEY_TIME] = this->timestamp;
     doc[JSON_KEY_PHYSICAL_DEVICE_ID] = this->thingsId;
-    doc[JSON_KEY_PAYLOAD_ID] = this->payloadId;
-
-    doc[JSON_KEY_NETWORK] = this->network;
-    doc[JSON_KEY_PROTOCOL] = this->protocol;
-    doc[JSON_KEY_MESSAGE_TYPE] = this->type;
+//    doc[JSON_KEY_PAYLOAD_ID] = this->payloadId;
+//
+//    doc[JSON_KEY_NETWORK] = this->network;
+//    doc[JSON_KEY_PROTOCOL] = this->protocol;
+//    doc[JSON_KEY_MESSAGE_TYPE] = this->type;
     return doc;
 }
 
@@ -182,7 +109,7 @@ grepfa::ErrorType grepfa::IPayload::setFromJSONObj2(ArduinoJson::JsonVariantCons
     if (!doc.containsKey(JSON_KEY_MESSAGE_TYPE))
         return ErrorType::ERR_JSON;
 
-    this->timestamp = doc[JSON_KEY_PHYSICAL_DEVICE_ID];
+    this->timestamp = doc[JSON_KEY_TIME];
     this->thingsId = doc[JSON_KEY_PHYSICAL_DEVICE_ID].as<ArduinoJson::JsonString>().c_str();
     this->payloadId = doc[JSON_KEY_PAYLOAD_ID].as<ArduinoJson::JsonString>().c_str();
 
@@ -191,6 +118,51 @@ grepfa::ErrorType grepfa::IPayload::setFromJSONObj2(ArduinoJson::JsonVariantCons
     this->type = doc[JSON_KEY_MESSAGE_TYPE].as<MessageType>();
 
     return ErrorType::OK;
+}
+
+grepfa::IPayload::IPayload(std::string payloadId, time_t timestamp, grepfa::NetworkType network,
+                           grepfa::ConnectionProtocol aProtocol, grepfa::MessageType type) : payloadId(std::move(payloadId)),
+                                                                                             timestamp(timestamp),
+                                                                                             network(network),
+                                                                                             protocol(aProtocol),
+                                                                                             type(type) {
+    thingsId = Global::getPhysicalId();
+    char uuid_buf[UUID_STR_LEN];
+    random_uuid(uuid_buf);
+    payloadId = uuid_buf;
+    timestamp = time(nullptr);
+}
+
+grepfa::IPayload::IPayload(grepfa::MessageType type) : type(type) {
+    thingsId = Global::getPhysicalId();
+    char uuid_buf[UUID_STR_LEN];
+    random_uuid(uuid_buf);
+    payloadId = uuid_buf;
+    timestamp = time(nullptr);
+}
+
+const std::string &grepfa::IPayload::getThingsId() const {
+    return thingsId;
+}
+
+const std::string &grepfa::IPayload::getPayloadId() const {
+    return payloadId;
+}
+
+time_t grepfa::IPayload::getTimestamp() const {
+    return timestamp;
+}
+
+grepfa::NetworkType grepfa::IPayload::getNetwork() const {
+    return network;
+}
+
+grepfa::ConnectionProtocol grepfa::IPayload::getAProtocol() const {
+    return protocol;
+}
+
+grepfa::MessageType grepfa::IPayload::getType() const {
+    return type;
 }
 
 std::string grepfa::NetworkTypeToString(grepfa::NetworkType type) {
@@ -242,16 +214,14 @@ const std::string &grepfa::Global::getPhysicalId() {
     return physicalId;
 }
 
-const std::string &grepfa::Global::getRootCa() {
+const char* grepfa::Global::getRootCa() {
     return rootCA;
 }
 
-const std::string &grepfa::Global::getClientCrt() {
+const char* grepfa::Global::getClientCrt() {
     return clientCRT;
 }
 
-const std::string &grepfa::Global::getClientKey() {
+const char* grepfa::Global::getClientKey() {
     return clientKEY;
 }
-
-

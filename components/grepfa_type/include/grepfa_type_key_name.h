@@ -42,4 +42,6 @@
 #define JSON_KEY_PROTOCOL           "protocol"
 #define JSON_KEY_MESSAGE_TYPE       "message_type"
 
+#define MQTT_TOPIC_HEADER "grepfa/v1/"
+
 #endif //GREPFA_ESP_COMPONENTS_GREPFA_TYPE_KEY_NAME_H

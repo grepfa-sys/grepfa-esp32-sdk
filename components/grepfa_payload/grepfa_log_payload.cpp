@@ -22,7 +22,7 @@ std::unique_ptr<grepfa::IPayload> grepfa::LogPayload::builder(LogLevel level, co
 }
 
 std::expected<std::string, grepfa::ErrorType> grepfa::LogPayload::toJSON() noexcept {
-    ArduinoJson::DynamicJsonDocument doc(2048);
+    ArduinoJson::DynamicJsonDocument doc(1024);
 
     auto base = baseJSON2(doc);
     if (!base) {

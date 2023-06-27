@@ -37,14 +37,20 @@ namespace grepfa {
     };
 
     class PayloadValue {
+
     private:
         int channel;
         std::string id;
-        std::string name;
         std::string value;
         std::string type;
         ValueType valueType;
     public:
+        [[nodiscard]] int getChannel() const;
+        [[nodiscard]] const std::string &getId() const;
+        [[nodiscard]] const std::string &getValue() const;
+        [[nodiscard]] const std::string &getType() const;
+        [[nodiscard]] ValueType getValueType() const;
+
         PayloadValue(int channel, std::string id, std::string value, std::string type, ValueType valueType);
 
         static PayloadValue builder(int channel, const std::string& id, const std::string& type, const std::string& value) noexcept;
@@ -53,9 +59,6 @@ namespace grepfa {
 //      static PayloadValue builder(int channel, const std::string& id, const std::string& type, float value) noexcept;
         static PayloadValue builder(int channel, const std::string& id, const std::string& type, bool value) noexcept;
 
-        static std::expected<PayloadValue, ErrorType> buildWithJSONObj(cJSON* obj);
-
-        std::expected<cJSON*, grepfa::ErrorType> baseJSON() noexcept;
     };
 
     class EventPayload : public IPayload {
@@ -63,44 +66,53 @@ namespace grepfa {
         std::vector<PayloadValue> values;
     public:
         EventPayload();
+        EventPayload(std::string payloadId, time_t timestamp, grepfa::NetworkType network,
+                     grepfa::ConnectionProtocol aProtocol);
         ~EventPayload() override;
 
         static std::unique_ptr<EventPayload> builder();
-        static std::expected<std::unique_ptr<EventPayload>, ErrorType> fromJSON(const std::string &jsonStr);
-
+        static std::expected<std::unique_ptr<EventPayload>, ErrorType> fromJSON(const ArduinoJson::JsonVariantConst doc);
         EventPayload *add(const PayloadValue& value);
+
         std::expected<std::string, grepfa::ErrorType> toJSON() noexcept override;
     };
 
     class ControlPayload : public IPayload {
 
     };
+
 }
 
 namespace ArduinoJson {
-//    template <>
-//    struct Converter<grepfa::PayloadValue> {
-//        static void toJson(const std::vector<T>& src, JsonVariant dst) {
-//            JsonArray array = dst.to<JsonArray>();
-//            for (T item : src)
-//                array.add(item);
-//        }
-//
-//        static std::vector<T> fromJson(JsonVariantConst src) {
-//            std::vector<T> dst;
-//            for (T item : src.as<JsonArrayConst>())
-//                dst.push_back(item);
-//            return dst;
-//        }
-//
-//        static bool checkJson(JsonVariantConst src) {
-//            JsonArrayConst array = src;
-//            bool result = array;
-//            for (JsonVariantConst item : array)
-//                result &= item.is<T>();
-//            return result;
-//        }
-//    };
+    template <>
+    struct Converter<grepfa::PayloadValue> {
+        static void toJson(const grepfa::PayloadValue& src, JsonVariant dst) {
+            dst["value"] = src.getValue();
+            dst["type"] = src.getType();
+            dst["valueType"] = src.getValueType();
+            dst["id"] = src.getId();
+            dst["channel"] = src.getChannel();
+        }
+
+        static grepfa::PayloadValue fromJson(JsonVariantConst src) {
+            return {
+                    src["channel"],
+                    src["id"],
+                    src["value"],
+                    src["type"],
+                    src["valueType"]
+                    };
+        }
+
+        static bool checkJson(JsonVariantConst src) {
+            return
+            src.containsKey("channel") &&
+            src.containsKey("id") &&
+            src.containsKey("value") &&
+            src.containsKey("type") &&
+            src.containsKey("valueType");
+        }
+    };
 }
 
 #endif //GREPFA_ESP_COMPONENTS_GREPFA_PAYLOAD_H
