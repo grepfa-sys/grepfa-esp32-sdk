@@ -9,7 +9,7 @@ examples/**/managed_components
 **/.DS_Store
 /sdkconfig
 /temp/
-/tests/
+
 /.idea/
-/build/
-/cmake-*/
+/**/build/
+/**/cmake-*/

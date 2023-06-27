@@ -1,6 +1,3 @@
 [submodule "components/grepfa_json/ArduinoJson"]
 	path = components/grepfa_json/ArduinoJson
 	url = https://github.com/bblanchon/ArduinoJson.git
-[submodule "components/rui3/rak3172"]
-	path = components/rui3/rak3172
-	url = https://gitlab.server-kampert.de/esp32/libraries/rak3172.git

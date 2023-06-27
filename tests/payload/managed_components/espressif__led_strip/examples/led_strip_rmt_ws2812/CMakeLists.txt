@@ -5,8 +5,4 @@
 cmake_minimum_required(VERSION 3.16)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(grepfa_esp_components)
-
-target_add_binary_data(${CMAKE_PROJECT_NAME}.elf "certs/root_cert_auth.crt" TEXT)
-target_add_binary_data(${CMAKE_PROJECT_NAME}.elf "certs/client.crt" TEXT)
-target_add_binary_data(${CMAKE_PROJECT_NAME}.elf "certs/client.key" TEXT)
+project(led_strip_rmt_ws2812)
