@@ -170,15 +170,16 @@ void lora() {
     {
         ESP_LOGI(TAG, "Joined...");
     }
-
-
+    srand(time(nullptr));
     while(true)
     {
+        int val = rand() % 3 + 30;
 
         auto ep = grepfa::EventPayload::builder();
         std::string a = "test uuid";
         std::string b = "sensor";
-        ep->add(grepfa::PayloadValue::builder(1, a, b, (int)time(NULL)));
+
+        ep->add(grepfa::PayloadValue::builder(1, a, b, val));
 
         auto payload = ep->toJSON();
         ESP_LOGI(TAG, "%d", payload->length());
